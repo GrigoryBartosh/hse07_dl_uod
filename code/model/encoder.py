@@ -110,4 +110,5 @@ class SSD300(nn.Module):
         locs, confs = self.bbox_view(detection_feed, self.loc, self.conf)
 
         # For SSD 300, shall return nbatch x 8732 x {nlabels, nlocs} results
-        return locs, confs
+        encoded = torch.cat([locs, confs], dim=1).permute(0, 2, 1)
+        return encoded

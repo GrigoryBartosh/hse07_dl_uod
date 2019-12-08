@@ -1,3 +1,4 @@
+from code.pipeline import Pipeline
 from code.train import *
 
 
@@ -7,6 +8,13 @@ def get_device():
 
 if __name__ == '__main__':
     device = get_device()
+    pipeline = Pipeline()
     trainer = Trainer(device)
-    # trainer.train()
+    trainer.train(
+        pipeline.model,
+        pipeline.optimizer,
+        pipeline.train_loader,
+        pipeline.test_loader,
+        pipeline.num_epochs
+    )
     # print('hello {}'.format('there'))
