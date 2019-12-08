@@ -5,7 +5,7 @@ import os
 import argparse
 import matplotlib.pyplot as plt
 
-from code.decoder import Decoder
+from code.model.decoder import Decoder
 
 
 def load_generated(n_samples, path):

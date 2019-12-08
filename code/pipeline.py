@@ -3,7 +3,7 @@ import os
 import torch
 import torchvision
 
-from code.decoder import Decoder
+from code.model.decoder import Decoder
 from code.model.encoder import SSD300
 from code.model.enocoder_decoder import EncoderDecoder
 

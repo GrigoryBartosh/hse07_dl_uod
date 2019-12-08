@@ -7,7 +7,7 @@ from PIL import Image
 
 
 def load_sample(number):
-    return Image.open(os.path.join('emoji', f'test_{number}.png'))
+    return Image.open(os.path.join('../emoji', f'test_{number}.png'))
 
 
 class Decoder(torch.nn.Module):
