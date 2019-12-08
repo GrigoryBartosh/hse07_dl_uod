@@ -5,7 +5,7 @@ import os
 import argparse
 import matplotlib.pyplot as plt
 
-from decoder import Decoder
+from code.decoder import Decoder
 
 
 def load_generated(n_samples, path):
@@ -46,16 +46,26 @@ class Generator(object):
         self._gen_params = output
         return self.decoder(torch.from_numpy(np.array(self._gen_params)))
 
-    def __call__(self, n_samples=10, n_emoji_range=(5, 6), output_dir='.'):
+    def __call__(self, n_samples, output_dir, n_emoji_range=(5, 6), test_train_split=0.8):
         self.n_samples = n_samples
         self.output_dir = output_dir
+        self._generate_to_folder(n_samples * test_train_split,
+                                 os.path.join(output_dir, 'data/train'),
+                                 os.path.join(output_dir, 'info/train'),
+                                 n_emoji_range)
 
-        for ind in range(n_samples):
+        self._generate_to_folder(n_samples * (1 - test_train_split),
+                                 os.path.join(output_dir, 'data/test'),
+                                 os.path.join(output_dir, 'info/test'),
+                                 n_emoji_range)
+
+    def _generate_to_folder(self, n_samples, output_dir, info_dir, n_emoji_range):
+        for ind in range(int(n_samples)):
             n_pictures = np.random.randint(n_emoji_range[0], n_emoji_range[1])
             image = self.gen_image(n_pictures).detach().numpy()
             image_path = os.path.join(output_dir, f'{ind}.png')
             plt.imsave(image_path, image.transpose(1, 2, 0))
-            self.save_description(os.path.join(output_dir, f'{ind}.txt'))
+            self.save_description(os.path.join(info_dir, f'{ind}.txt'))
 
     def save_description(self, path):
         with open(path, 'w') as output_file:
