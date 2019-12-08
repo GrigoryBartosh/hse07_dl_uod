@@ -3,6 +3,7 @@ import os
 import torch
 import torchvision
 
+from code.decoder import Decoder
 from code.model.encoder import SSD300
 from code.model.enocoder_decoder import EncoderDecoder
 
@@ -14,7 +15,7 @@ class Pipeline:
         self.data_path = './../data/generated/'
 
         # Params
-        self.class_num = 10
+        self.class_num = 13
         self.encoder_learning_rate = 0.0001
         self.batch_size = 32
         self.num_epochs = 50
@@ -29,7 +30,7 @@ class Pipeline:
 
     def get_model(self):
         encoder = SSD300(self.class_num)
-        decoder = []
+        decoder = Decoder(n_images=self.class_num)
         return EncoderDecoder(encoder, decoder)
 
     def get_encoder_optimizer(self):
