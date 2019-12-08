@@ -71,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_path', default='./generated_dataset', type=str, help='Path to save generated dataset')
     parser.add_argument('--n_samples', default=100, type=int, help='Number of samples to generate')
     parser.add_argument('--n_min_pictures', default=2, type=int, help='Min number of emoji on one picture')
-    parser.add_argument('--n_max_pictures', default=11, type=int, help='Min number of emoji on one picture')
+    parser.add_argument('--n_max_pictures', default=11, type=int, help='Max number of emoji on one picture')
     args = parser.parse_args()
 
     gen = Generator()
