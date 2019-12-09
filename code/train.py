@@ -16,7 +16,7 @@ class Trainer:
                 loss += curr_loss.item()
                 curr_loss.backward()
                 optimizer.step()
-                if iteration % 100 == 0:
+                if iteration % 1 == 0:
                     print(f"iteration is {iteration}, curr_loss is ${curr_loss}, total loss is ${loss / iteration}")
 
             with torch.no_grad():

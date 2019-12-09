@@ -2,17 +2,18 @@ import os
 
 import torch
 import torchvision
+from torch.utils.data import DataLoader
 
+from code.dataset import EmojiDataset
 from code.model.decoder import Decoder
 from code.model.encoder import SSD300
 from code.model.enocoder_decoder import EncoderDecoder
 
 
 class Pipeline:
-
     def __init__(self):
         # GLOBAL SETTINGS
-        self.data_path = './../data/generated/'
+        self.data_path = './generated_dataset/data'
 
         # Params
         self.class_num = 13
@@ -37,19 +38,19 @@ class Pipeline:
         return torch.optim.Adam(self.model.parameters(), lr=self.encoder_learning_rate)
 
     def get_train_loader(self):
-        return torch.utils.data.DataLoader(self.train_data, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.train_data, batch_size=self.batch_size, shuffle=True)
 
     def get_test_loader(self):
-        return torch.utils.data.DataLoader(self.test_data, batch_size=self.batch_size)
+        return DataLoader(self.test_data, batch_size=self.batch_size)
 
     def get_train_data(self):
-        return torchvision.datasets.ImageFolder(
+        return EmojiDataset(
             root=os.path.join(self.data_path, 'train'),
             transform=torchvision.transforms.ToTensor()
         )
 
     def get_test_data(self):
-        return torchvision.datasets.ImageFolder(
+        return EmojiDataset(
             root=os.path.join(self.data_path, 'test'),
             transform=torchvision.transforms.ToTensor()
         )
