@@ -12,6 +12,7 @@ if __name__ == '__main__':
     trainer = Trainer(device)
     trainer.train(
         pipeline.model,
+        pipeline.criterion,
         pipeline.optimizer,
         pipeline.train_loader,
         pipeline.test_loader,

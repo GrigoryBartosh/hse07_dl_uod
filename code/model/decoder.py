@@ -40,18 +40,24 @@ class Decoder(torch.nn.Module):
         image = torch.ones(*self.image_shape, dtype=torch.float32)
 
         n_samples = data.shape[0]
-        order = np.arange(n_samples)[np.argsort(d)]
+        order = np.arange(n_samples)[torch.argsort(d)]
         for i in order:
-            x1, y1, x2, y2 = x[i] - h[i] // 2, y[i] - w[i] // 2, x[i] + (h[i] + 1) // 2, y[i] + (w[i] + 1) // 2
+            # x1, y1, x2, y2 = x[i] - h[i] // 2, y[i] - w[i] // 2, x[i] + (h[i] + 1) // 2, y[i] + (w[i] + 1) // 2
+            x1, y1, x2, y2 = x[i], y[i], x[i] + self.emoji_shape[1], y[i] + self.emoji_shape[1]  # FIXME
+            if x2 >= 300 or y2 >= 300 or x1 < 0 or y1 < 0:
+                continue
 
             new_image = self.get_image(c[i].argmax())
             c_new = new_image[:3, :, :]
-            alpha_new = new_image[3, :, :].repeat(3, 1, 1)
-            c_old = image[:3, x1:x2, y1:y2]
-            alpha_old = image[3, x1:x2, y1:y2].repeat(3, 1, 1)
-            alpha_0 = alpha_new + alpha_old * (1 - alpha_new)
+            # alpha_new = new_image[3, :, :].repeat(3, 1, 1)
+            # c_old = image[:3, x1:x2, y1:y2]
+            # alpha_old = image[3, x1:x2, y1:y2].repeat(3, 1, 1)
+            # print(alpha_new.shape, alpha_old.shape)
+            # alpha_0 = alpha_new + alpha_old * (1 - alpha_new)
 
-            image[:3, x1:x2, y1:y2] = (c_new * alpha_new + c_old * alpha_old * (1 - alpha_new)) / alpha_0
-            image[3, x1:x2, y1:y2] = alpha_0[0, :, :]
+            # image[:3, x1:x2, y1:y2] = (c_new * alpha_new + c_old * alpha_old * (1 - alpha_new)) / alpha_0
+            # image[3, x1:x2, y1:y2] = alpha_0[0, :, :]
 
-        return image
+            image[:3, x1:x2, y1:y2] = c_new
+
+        return image[:3]

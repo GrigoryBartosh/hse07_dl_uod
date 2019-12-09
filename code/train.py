@@ -5,14 +5,15 @@ class Trainer:
     def __init__(self, device):
         self.device = device
 
-    def train(self, model, optimizer, train_loader, test_loader, num_epochs):
+    def train(self, model, criterion, optimizer, train_loader, test_loader, num_epochs):
         for epoch in range(num_epochs):
             loss, val_loss = 0, 0
             for iteration, batch in enumerate(train_loader):
                 batch = batch.to(self.device)
                 optimizer.zero_grad()
-                data, curr_loss = model(batch)
-                curr_loss = curr_loss.mean()
+                data = model(batch)
+                curr_loss = criterion(data, batch)
+                print(curr_loss)
                 loss += curr_loss.item()
                 curr_loss.backward()
                 optimizer.step()
@@ -22,8 +23,9 @@ class Trainer:
             with torch.no_grad():
                 for batch in test_loader:
                     batch = batch.to(self.device)
-                    data, curr_loss = model(batch)
-                    val_loss += curr_loss.mean()
+                    data = model(batch)
+                    curr_loss = criterion(data, batch)
+                    val_loss += curr_loss
 
             mean_loss = loss / len(train_loader)
             mean_val_loss = val_loss / len(test_loader)

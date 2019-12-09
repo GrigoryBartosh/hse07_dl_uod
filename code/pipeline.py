@@ -25,6 +25,7 @@ class Pipeline:
         self.test_data = self.get_test_data()
 
         self.model = self.get_model()
+        self.criterion = self.get_criterion()
         self.optimizer = self.get_encoder_optimizer()
         self.train_loader = self.get_train_loader()
         self.test_loader = self.get_test_loader()
@@ -33,6 +34,9 @@ class Pipeline:
         encoder = SSD300(self.class_num)
         decoder = Decoder(n_images=self.class_num)
         return EncoderDecoder(encoder, decoder)
+
+    def get_criterion(self):
+        return torch.nn.MSELoss()
 
     def get_encoder_optimizer(self):
         return torch.optim.Adam(self.model.parameters(), lr=self.encoder_learning_rate)
