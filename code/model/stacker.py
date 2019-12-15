@@ -1,9 +1,19 @@
+import os
+
 import torch
 import torch.nn as nn
 
+import matplotlib.pyplot as plt
+
 __all__ = ['Stacker']
 
+import torchvision
+
+from torch.utils.data import DataLoader
+
 from code.common.utils import activation_by_name
+from code.dataset import EmojiDataset, MovableDataset
+from code.train import Trainer
 
 
 def conv1x1(in_planes, out_planes, stride=1):
@@ -285,6 +295,8 @@ class Mover(nn.Module):
         assert False, f"Unsupported block: {self.args['block']}"
 
     def forward(self, x, x_params_move):
+        print('x:', x.shape)
+        print('x_params:', x_params_move.shape)
         x = x[:, None, :, :]
 
         x = self.encoder(x)
@@ -296,6 +308,7 @@ class Mover(nn.Module):
         x = self.decoder(x)
 
         x = x.squeeze(1)
+        print('out_inside:', x.shape)
 
         return x
 
@@ -318,3 +331,74 @@ class Stacker(nn.Module):
         x_params_move, x_rgb = x_params[:, :5], x_params[:, 5:]
         x_t = self.move(x_t, x_params_move)
         return self.stack(x_i, x_t, x_rgb)
+
+def get_stacker():
+    params_move_count = 5
+    stacker_model = {
+        'encoder': {
+            'block': 'ResBasicBlock',
+            'layers': [2, 2, 2, 2],
+            'activ': 'relu'
+        },
+        'decoder': {
+            'block': 'ResBasicBlock',
+            'layers': [2, 2, 2, 2],
+            'activ': 'lrelu'
+        },
+        'params_move_count': params_move_count
+    }
+    return Stacker(stacker_model)
+
+
+def get_mover():
+    params_move_count = 5
+    stacker_model = {
+        'encoder': {
+            'block': 'ResBasicBlock',
+            'layers': [2, 2, 2, 2],
+            'activ': 'relu'
+        },
+        'decoder': {
+            'block': 'ResBasicBlock',
+            'layers': [2, 2, 2, 2],
+            'activ': 'lrelu'
+        },
+        'params_move_count': params_move_count
+    }
+    return Mover(stacker_model)
+
+
+if __name__ == '__main__':
+    trainer = Trainer(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+    # image = torch.zeros(2, 80, 100)
+    # move_params = torch.ones(2, 5)
+    model = get_mover()
+    # res = model(image, move_params)
+    # print('-----------')
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
+    batch_size = 32
+    train_data = MovableDataset(
+        root=os.path.join('./../../datasets/mover/', 'train'),
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Grayscale(),
+            torchvision.transforms.ToTensor()
+        ])
+    )
+    test_data = MovableDataset(
+        root=os.path.join('./../../datasets/mover/', 'test'),
+        transform=torchvision.transforms.Compose([
+            torchvision.transforms.Grayscale(),
+            torchvision.transforms.ToTensor()
+        ])
+    )
+    train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=32)
+    for (x, moves), y in train_loader:
+        plt.imsave('./x.png', torch.ones(y[0].shape).numpy(), cmap='gray', vmin=0, vmax=1)
+        # print(moves[0])
+        plt.imsave('./y.png', y[0].numpy(), cmap='gray', vmin=0, vmax=1)
+        loss = nn.MSELoss()
+        print(loss(y[0], torch.ones(y[0].shape)))
+        break
+    # trainer.train(model, nn.MSELoss(), optimizer, train_loader, test_loader, 20)
+    # print(res.shape)

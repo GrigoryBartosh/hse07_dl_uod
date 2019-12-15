@@ -42,10 +42,15 @@ class Pipeline:
         return torch.optim.Adam(self.model.parameters(), lr=self.encoder_learning_rate)
 
     def get_train_loader(self):
-        return DataLoader(self.train_data, batch_size=self.batch_size, shuffle=True)
+        return self.duplicate_data_loader(DataLoader(self.train_data, batch_size=self.batch_size, shuffle=True))
 
     def get_test_loader(self):
-        return DataLoader(self.test_data, batch_size=self.batch_size)
+        return self.duplicate_data_loader(DataLoader(self.test_data, batch_size=self.batch_size))
+
+    @staticmethod
+    def duplicate_data_loader(data_loader):
+        for data in data_loader:
+            yield data, data
 
     def get_train_data(self):
         return EmojiDataset(

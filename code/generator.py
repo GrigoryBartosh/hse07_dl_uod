@@ -1,3 +1,5 @@
+import shutil
+
 import torch
 import numpy as np
 import torch.nn
@@ -19,7 +21,7 @@ def load_generated(n_samples, path):
 
 
 class Generator(object):
-    def __init__(self, target_shape=(4, 300, 300)):
+    def __init__(self, target_shape=(4, 320, 320)):
         self.target_shape = target_shape
         self.decoder = Decoder(image_shape=target_shape)
         self._gen_params = None
@@ -50,16 +52,20 @@ class Generator(object):
         self.n_samples = n_samples
         self.output_dir = output_dir
         self._generate_to_folder(n_samples * test_train_split,
-                                 os.path.join(output_dir, 'data/train'),
-                                 os.path.join(output_dir, 'info/train'),
+                                 os.path.join(output_dir, 'train/data'),
+                                 os.path.join(output_dir, 'train/info'),
                                  n_emoji_range)
 
         self._generate_to_folder(n_samples * (1 - test_train_split),
-                                 os.path.join(output_dir, 'data/test'),
-                                 os.path.join(output_dir, 'info/test'),
+                                 os.path.join(output_dir, 'test/data'),
+                                 os.path.join(output_dir, 'test/info'),
                                  n_emoji_range)
 
     def _generate_to_folder(self, n_samples, output_dir, info_dir, n_emoji_range):
+        for directory in [output_dir, info_dir]:
+            if os.path.exists(directory):
+                shutil.rmtree(directory)
+            os.makedirs(directory)
         for ind in range(int(n_samples)):
             n_pictures = np.random.randint(n_emoji_range[0], n_emoji_range[1])
             image = self.gen_image(n_pictures).detach().numpy()
@@ -78,7 +84,7 @@ class Generator(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output_path', default='./generated_dataset', type=str, help='Path to save generated dataset')
+    parser.add_argument('--output_path', default='./../datasets/mover', type=str, help='Path to save generated dataset')
     parser.add_argument('--n_samples', default=100, type=int, help='Number of samples to generate')
     parser.add_argument('--n_min_pictures', default=2, type=int, help='Min number of emoji on one picture')
     parser.add_argument('--n_max_pictures', default=11, type=int, help='Max number of emoji on one picture')
