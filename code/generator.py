@@ -46,7 +46,7 @@ class Generator(object):
                            *classes])
 
         self._gen_params = output
-        return self.decoder(torch.from_numpy(np.array(self._gen_params)))
+        return self.decoder(torch.from_numpy(np.array(self._gen_params))[None])[0]
 
     def __call__(self, n_samples, output_dir, n_emoji_range=(5, 6), test_train_split=0.8):
         self.n_samples = n_samples
