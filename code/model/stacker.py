@@ -386,7 +386,9 @@ class ReceptieveFieldMseLoss:
 
 
 if __name__ == '__main__':
-    trainer = Trainer(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(device)
+    trainer = Trainer(device)
     # image = torch.zeros(2, 80, 100)
     # move_params = torch.ones(2, 5)
     model = get_mover()
@@ -417,5 +419,5 @@ if __name__ == '__main__':
         # loss = nn.MSELoss()
         # print(loss(y[0], torch.ones(y[0].shape)))
         # break
-    trainer.train(model, ReceptieveFieldMseLoss(), optimizer, train_loader, test_loader, 20)
+    trainer.train(model.to(device), ReceptieveFieldMseLoss(), optimizer, train_loader, test_loader, 20, device)
     # print(res.shape)
