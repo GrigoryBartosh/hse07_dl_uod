@@ -2,6 +2,7 @@ import torch
 
 import matplotlib.pyplot as plt
 
+
 class Trainer:
     def __init__(self, device):
         self.device = device
@@ -14,7 +15,7 @@ class Trainer:
                 optimizer.zero_grad()
                 output = model(*x)
                 plt.imsave(f'./training/{epoch}_{iteration}.png', output[0].detach().numpy(), cmap='gray', vmin=0, vmax=1)
-                curr_loss = criterion(output, y)
+                curr_loss = criterion(output, y, x[1])
                 loss += curr_loss.item()
                 curr_loss.backward()
                 optimizer.step()

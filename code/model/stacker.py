@@ -367,6 +367,23 @@ def get_mover():
     }
     return Mover(stacker_model)
 
+class ReceptieveFieldMseLoss:
+
+    def __init__(self):
+        self.mse_loss = nn.MSELoss()
+
+    def __call__(self, data, expected, box):
+        N, W, H = data.shape
+        x = torch.round(box[:, 0] * W).int()
+        y = torch.round(box[:, 1] * H).int()
+        h = torch.round(box[:, 2] * W).int()
+        w = torch.round(box[:, 3] * H).int()
+        loss = 0
+        for i in range(N):
+            x1, y1, x2, y2 = x[i] - h[i] // 2, y[i] - w[i] // 2, x[i] + (h[i] + 1) // 2, y[i] + (w[i] + 1) // 2
+            loss += self.mse_loss(data[:, x1:x2, y1:y2], expected[:, x1:x2, y1:y2])
+        return loss / N
+
 
 if __name__ == '__main__':
     trainer = Trainer(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
@@ -393,12 +410,12 @@ if __name__ == '__main__':
     )
     train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
     test_loader = DataLoader(test_data, batch_size=32)
-    for (x, moves), y in train_loader:
-        plt.imsave('./x.png', torch.ones(y[0].shape).numpy(), cmap='gray', vmin=0, vmax=1)
+    # for (x, moves), y in train_loader:
+    #     plt.imsave('./x.png', torch.ones(y[0].shape).numpy(), cmap='gray', vmin=0, vmax=1)
         # print(moves[0])
-        plt.imsave('./y.png', y[0].numpy(), cmap='gray', vmin=0, vmax=1)
-        loss = nn.MSELoss()
-        print(loss(y[0], torch.ones(y[0].shape)))
-        break
-    # trainer.train(model, nn.MSELoss(), optimizer, train_loader, test_loader, 20)
+        # plt.imsave('./y.png', y[0].numpy(), cmap='gray', vmin=0, vmax=1)
+        # loss = nn.MSELoss()
+        # print(loss(y[0], torch.ones(y[0].shape)))
+        # break
+    trainer.train(model, ReceptieveFieldMseLoss(), optimizer, train_loader, test_loader, 20)
     # print(res.shape)

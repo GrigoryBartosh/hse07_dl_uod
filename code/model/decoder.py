@@ -47,20 +47,20 @@ class Decoder(torch.nn.Module):
         d = data[:, 4]
         c = data[:, 5:]
 
-            # order = np.arange(n_emoji)[torch.argsort(d, dim=1)].T
-            for i in np.arange(n_emoji)[torch.argsort(d)]:
-                x1, y1, x2, y2 = x[i] - h[i] // 2, y[i] - w[i] // 2, x[i] + (h[i] + 1) // 2, y[i] + (w[i] + 1) // 2
-                if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2]:
-                    continue
+        # order = np.arange(n_emoji)[torch.argsort(d, dim=1)].T
+        for i in np.arange(n_emoji)[torch.argsort(d)].reshape(-1):
+            x1, y1, x2, y2 = x[i] - h[i] // 2, y[i] - w[i] // 2, x[i] + (h[i] + 1) // 2, y[i] + (w[i] + 1) // 2
+            if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2]:
+                continue
 
-                new_image = self.get_image(c[i].argmax())
-                c_new = new_image[:3, :, :]
-                alpha_new = new_image[3, :, :].repeat(3, 1, 1)
-                c_old = image[:3, x1:x2, y1:y2]
-                alpha_old = image[3, x1:x2, y1:y2].repeat(3, 1, 1)
-                alpha_0 = alpha_new + alpha_old * (1 - alpha_new)
+            new_image = self.get_image(c[i].argmax())
+            c_new = new_image[:3, :, :]
+            alpha_new = new_image[3, :, :].repeat(3, 1, 1)
+            c_old = image[:3, x1:x2, y1:y2]
+            alpha_old = image[3, x1:x2, y1:y2].repeat(3, 1, 1)
+            alpha_0 = alpha_new + alpha_old * (1 - alpha_new)
 
-                image[:3, x1:x2, y1:y2] = (c_new * alpha_new + c_old * alpha_old * (1 - alpha_new)) / alpha_0
-                image[3, x1:x2, y1:y2] = alpha_0[0, :, :]
+            image[:3, x1:x2, y1:y2] = (c_new * alpha_new + c_old * alpha_old * (1 - alpha_new)) / alpha_0
+            image[3, x1:x2, y1:y2] = alpha_0[0, :, :]
 
         return img[:, :3]
