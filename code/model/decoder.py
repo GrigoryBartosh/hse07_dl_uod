@@ -9,7 +9,8 @@ from code.model.stacker import Stacker
 
 
 def load_sample(number):
-    return Image.open(os.path.join('./../datasets/emoji', f'test_{number}.png'))
+    # return Image.open(os.path.join('./../datasets/emoji', f'test_{number}.png'))
+    return Image.open(os.path.join('./../datasets/black', 'black.png'))
 
 
 class Decoder(torch.nn.Module):

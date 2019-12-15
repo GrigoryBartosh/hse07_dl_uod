@@ -58,7 +58,8 @@ class MovableDataset(Dataset):
         x_moves = info[:5]
         x_probs = info[5:]
         x_class_number = x_probs.argmax()
-        x_image_dir = os.path.join(self.emoji_dir, f'test_{x_class_number.item()}.png')
+        # x_image_dir = os.path.join(self.emoji_dir, f'test_{x_class_number.item()}.png')
+        x_image_dir = os.path.join('./../../datasets/black/', 'black.png')
         x_image = Image.open(x_image_dir)
         x_image = x_image.resize((320, 320))
         x_image = np.array(x_image)

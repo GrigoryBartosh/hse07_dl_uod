@@ -386,6 +386,9 @@ class ReceptieveFieldMseLoss:
 
 
 if __name__ == '__main__':
+    # image = torch.zeros((64, 64)).float()
+    # plt.imsave('./../../datasets/black/black.png', image.detach().numpy(), cmap='gray', vmin=0, vmax=1)
+    # exit(0)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
     trainer = Trainer(device)
@@ -413,11 +416,11 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
     test_loader = DataLoader(test_data, batch_size=32)
     # for (x, moves), y in train_loader:
-    #     plt.imsave('./x.png', torch.ones(y[0].shape).numpy(), cmap='gray', vmin=0, vmax=1)
+        # plt.imsave('./x.png', torch.ones(y[0].shape).numpy(), cmap='gray', vmin=0, vmax=1)
         # print(moves[0])
         # plt.imsave('./y.png', y[0].numpy(), cmap='gray', vmin=0, vmax=1)
-        # loss = nn.MSELoss()
-        # print(loss(y[0], torch.ones(y[0].shape)))
+        # loss = ReceptieveFieldMseLoss()
+        # print(loss(y[:1], torch.ones(y.shape)[:1], moves[:1]))
         # break
     trainer.train(model.to(device), ReceptieveFieldMseLoss(), optimizer, train_loader, test_loader, 20, device)
     # print(res.shape)
