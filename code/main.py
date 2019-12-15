@@ -10,6 +10,7 @@ if __name__ == '__main__':
     device = get_device()
     pipeline = Pipeline()
     trainer = Trainer(device)
+    torch.autograd.set_detect_anomaly(True)
     trainer.train(
         pipeline.model,
         pipeline.criterion,
