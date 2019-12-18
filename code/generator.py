@@ -21,7 +21,7 @@ def load_generated(n_samples, path):
 
 
 class Generator(object):
-    def __init__(self, target_shape=(4, 320, 320)):
+    def __init__(self, target_shape=(4, 300, 300)):
         self.target_shape = target_shape
         self.decoder = Decoder(image_shape=target_shape)
         self._gen_params = None

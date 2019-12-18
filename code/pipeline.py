@@ -11,14 +11,15 @@ from code.model.enocoder_decoder import EncoderDecoder
 
 
 class Pipeline:
-    def __init__(self):
+    def __init__(self, device):
         # GLOBAL SETTINGS
-        self.data_path = './generated_dataset/data'
+        self.data_path = '../datasets/mover'
 
         # Params
+        self.device = device
         self.class_num = 13
         self.encoder_learning_rate = 0.0001
-        self.batch_size = 32
+        self.batch_size = 4
         self.num_epochs = 50
 
         self.train_data = self.get_train_data()
@@ -32,7 +33,7 @@ class Pipeline:
 
     def get_model(self):
         encoder = SSD300(self.class_num)
-        decoder = Decoder(n_images=self.class_num)
+        decoder = Decoder(self.device, n_images=self.class_num)
         return EncoderDecoder(encoder, decoder)
 
     def get_criterion(self):
@@ -54,12 +55,12 @@ class Pipeline:
 
     def get_train_data(self):
         return EmojiDataset(
-            root=os.path.join(self.data_path, 'train'),
+            root=os.path.join(self.data_path, 'train/data'),
             transform=torchvision.transforms.ToTensor()
         )
 
     def get_test_data(self):
         return EmojiDataset(
-            root=os.path.join(self.data_path, 'test'),
+            root=os.path.join(self.data_path, 'test/data'),
             transform=torchvision.transforms.ToTensor()
         )
