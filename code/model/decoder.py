@@ -41,17 +41,16 @@ class Decoder(torch.nn.Module):
         for batch_number in range(n_pictures):
             for suggest in range(X.shape[1]):
                 data = X[batch_number][suggest]
-                print(data.shape)
                 image = self.get_image(data[5:].argmax())
-                x1 = torch.round(data[:, 0] * self.image_shape[1]).int()
-                x2 = torch.round(data[:, 1] * self.image_shape[1]).int()
-                y1 = torch.round(data[:, 2] * self.image_shape[2]).int()
-                y2 = torch.round(data[:, 3] * self.image_shape[2]).int()
-                if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2]:
+                x1 = torch.round(data[0] * self.image_shape[1]).int()
+                x2 = torch.round(data[1] * self.image_shape[1]).int()
+                y1 = torch.round(data[2] * self.image_shape[2]).int()
+                y2 = torch.round(data[3] * self.image_shape[2]).int()
+                if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2] or x2 <= x1 or y2 <= y1:
                     continue
                 result[batch_number] += apply_transform(image, torch.tensor([x1, x2, y1, y2]))
 
-        return result
+        return result[:, :3]
 
         # img = torch.ones(n_pictures, *self.image_shape, dtype=torch.float32)
         #

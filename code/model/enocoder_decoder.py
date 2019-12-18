@@ -11,7 +11,7 @@ class EncoderDecoder(nn.Module):
     def forward(self, x):
         # N x M x params
         encoded = self.encoder(x)
-        decoded = []
-        for im in encoded:
-            decoded.append(self.decoder(im)[None, :, :, :])
-        return torch.cat(decoded)
+        decoded = self.decoder(encoded)
+        # for im in encoded:
+        #     decoded.append(self.decoder(im)[None, :, :, :])
+        return decoded
