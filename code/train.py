@@ -7,15 +7,14 @@ class Trainer:
     def __init__(self, device):
         self.device = device
 
-    def train(self, model, criterion, optimizer, train_loader, test_loader, num_epochs, device):
+    def train(self, model, criterion, optimizer, train_loader, test_loader, num_epochs):
         for epoch in range(num_epochs):
             loss, val_loss = 0, 0
-            for iteration, (x, y) in enumerate(train_loader):
-                print('y:', y.shape)
+            for iteration, x in enumerate(train_loader):
                 optimizer.zero_grad()
-                output = model(x[0].to(device), x[1].to(device))
-                plt.imsave(f'./training/{epoch}_{iteration}.png', output[0].detach().cpu().numpy(), cmap='gray', vmin=0, vmax=1)
-                curr_loss = criterion(output, y.to(device), x[1].to(device))
+                x = x.to(self.device)
+                output = model(x)
+                curr_loss = criterion(output, x)
                 loss += curr_loss.item()
                 curr_loss.backward()
                 optimizer.step()
