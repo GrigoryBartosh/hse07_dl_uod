@@ -8,6 +8,7 @@ class Trainer:
         self.device = device
 
     def train(self, model, criterion, optimizer, train_loader, test_loader, num_epochs):
+        model = model.to(self.device)
         for epoch in range(num_epochs):
             loss, val_loss = 0, 0
             for iteration, x in enumerate(train_loader):

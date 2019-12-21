@@ -8,7 +8,7 @@ def get_device():
 
 if __name__ == '__main__':
     device = get_device()
-    pipeline = Pipeline()
+    pipeline = Pipeline(device)
     trainer = Trainer(device)
     torch.autograd.set_detect_anomaly(True)
     trainer.train(

@@ -8,14 +8,15 @@ from PIL import Image
 
 
 def load_sample(number):
-    # return Image.open(os.path.join('./../datasets/emoji', f'test_{number}.png'))
-    return Image.open(os.path.join('./../datasets/bif-emoji', f'test_{number}.png'))
+    return Image.open(os.path.join('./../datasets/emoji', f'test_{number}.png'))
+    # return Image.open(os.path.join('./../datasets/bif-emoji', f'test_{number}.png'))
     # return Image.open(os.path.join('./../datasets/black', 'black.png'))
 
 
 class Decoder(torch.nn.Module):
-    def __init__(self, image_shape=(4, 300, 300), emoji_shape=(4, 64, 64), n_images=13, generate=True):
+    def __init__(self, device, image_shape=(4, 300, 300), emoji_shape=(4, 64, 64), n_images=13, generate=True):
         super(Decoder, self).__init__()
+        self.device = device
         self.image_shape = image_shape
         self.emoji_shape = emoji_shape
         self.n_images = n_images
@@ -40,7 +41,7 @@ class Decoder(torch.nn.Module):
         X = self.filter_sugggest(X)
 
         result = torch.ones((n_pictures,) + self.image_shape, requires_grad=True)
-        # result = torch.zeros((n_pictures,) + self.image_shape)
+        # result = torch.zeros((n_pictures,) + self.image_shape).to(self.device)
         for batch_number in range(n_pictures):
             for suggest in range(X.shape[1]):
                 data = X[batch_number][suggest]
