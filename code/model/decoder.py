@@ -54,7 +54,7 @@ class Decoder(torch.nn.Module):
                 print(x1.item(), x2.item(), y1.item(), y2.item())
                 if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2] or x2 <= x1 or y2 <= y1:
                     continue
-                result[batch_number] += apply_transform(image, torch.tensor([x1, x2, y1, y2]))
+                result[batch_number] += apply_transform(image.reshape(1, *image.shape), torch.tensor([[x1, x2, y1, y2]]))
 
         result = result[:, :3]
         return result
