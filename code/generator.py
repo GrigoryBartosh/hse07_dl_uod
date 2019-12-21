@@ -21,7 +21,7 @@ def load_generated(n_samples, path):
 
 
 class Generator(object):
-    def __init__(self, target_shape=(4, 320, 320)):
+    def __init__(self, target_shape=(4, 300, 300)):
         self.target_shape = target_shape
         self.decoder = Decoder(image_shape=target_shape)
         self._gen_params = None
@@ -46,7 +46,7 @@ class Generator(object):
                            *classes])
 
         self._gen_params = output
-        return self.decoder(torch.from_numpy(np.array(self._gen_params))[None])[0]
+        return self.decoder.forward1(torch.from_numpy(np.array(self._gen_params))[None])[0]
 
     def __call__(self, n_samples, output_dir, n_emoji_range=(5, 6), test_train_split=0.8):
         self.n_samples = n_samples

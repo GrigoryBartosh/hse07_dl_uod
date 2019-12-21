@@ -5,7 +5,7 @@ import torch
 import torchvision
 from PIL import Image
 from torch.utils.data import Dataset
-
+import matplotlib.pyplot as plt
 
 class EmojiDataset(Dataset):
 
@@ -69,3 +69,14 @@ class MovableDataset(Dataset):
         x_image = x_image.squeeze()
 
         return (x_image, x_moves), y
+
+
+if __name__ == "__main__":
+    emoji_dir = './../datasets/emoji/'
+    for i in range(13):
+        targ_dir = f'./../datasets/bif-emoji/test_{i}.png'
+        x_image_dir = os.path.join(emoji_dir, f'test_{i}.png')
+        x_image = Image.open(x_image_dir)
+        x_image = x_image.resize((300, 300))
+        x_image = np.array(x_image)
+        plt.imsave(targ_dir, x_image)

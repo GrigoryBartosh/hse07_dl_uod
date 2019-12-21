@@ -13,7 +13,7 @@ from code.model.enocoder_decoder import EncoderDecoder
 class Pipeline:
     def __init__(self):
         # GLOBAL SETTINGS
-        self.data_path = './generated_dataset/data'
+        self.data_path = './../datasets/mover'
 
         # Params
         self.class_num = 13
@@ -54,12 +54,12 @@ class Pipeline:
 
     def get_train_data(self):
         return EmojiDataset(
-            root=os.path.join(self.data_path, 'train'),
+            root=os.path.join(self.data_path, 'train/data'),
             transform=torchvision.transforms.ToTensor()
         )
 
     def get_test_data(self):
         return EmojiDataset(
-            root=os.path.join(self.data_path, 'test'),
+            root=os.path.join(self.data_path, 'test/data'),
             transform=torchvision.transforms.ToTensor()
         )

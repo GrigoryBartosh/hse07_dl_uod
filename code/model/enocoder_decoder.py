@@ -11,6 +11,8 @@ class EncoderDecoder(nn.Module):
     def forward(self, x):
         # N x M x params
         encoded = self.encoder(x)
+        print("enc", encoded[0][0])
+        print("enc", encoded[0][0].shape)
         decoded = self.decoder(encoded)
         # for im in encoded:
         #     decoded.append(self.decoder(im)[None, :, :, :])

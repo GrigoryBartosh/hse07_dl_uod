@@ -14,6 +14,11 @@ class Trainer:
                 optimizer.zero_grad()
                 x = x.to(self.device)
                 output = model(x)
+                image = (output[0] * 255).int().detach().numpy().transpose(1, 2, 0)
+                # image[image[:, :, 3] <= 11] = 255
+                # image = image[:,:,:3]
+                print(image.shape)
+                plt.imsave(f"test_{iteration}.png", image.astype('uint8'))
                 curr_loss = criterion(output, x)
                 loss += curr_loss.item()
                 curr_loss.backward()
