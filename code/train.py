@@ -18,17 +18,13 @@ class Trainer:
                 with torch.autograd.detect_anomaly():
                     x = x.to(self.device)
                     output = model(x)
-                    print("out", output.shape)
-                    print("in", x.shape)
                     image = (output[0] * 255).detach().cpu().numpy().transpose(1, 2, 0)
-                    # image[image[:, :, 3] <= 11] = 255
-                    # image = image[:,:,:3]
 
-                    plt.imsave(f"test_{iteration}.png", image.astype('uint8'))
-                    small_x = torch.zeros((x.shape[0], 3, 100, 100))
+                    plt.imsave(f"training/test_{iteration}.png", image.astype('uint8'))
+                    small_x = torch.zeros((x.shape[0], 3, 32, 32))
                     for ind in range(len(x)):
                         pil = Image.fromarray(x[ind].detach().int().cpu().numpy().transpose(1, 2, 0).astype('uint8'))
-                        resized = np.asarray(pil.resize((100, 100)))
+                        resized = np.asarray(pil.resize((32, 32)))
                         small_x[ind] = torch.tensor(resized.transpose(2, 0, 1))
 
                     curr_loss = criterion(output, small_x.to(self.device))

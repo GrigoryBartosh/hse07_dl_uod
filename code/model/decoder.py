@@ -12,7 +12,7 @@ def load_sample(number):
 
 
 class Decoder(torch.nn.Module):
-    def __init__(self, device, image_shape=(4, 100, 100), emoji_shape=(4, 64, 64), n_images=13, generate=False):
+    def __init__(self, device, image_shape=(4, 32, 32), emoji_shape=(4, 64, 64), n_images=4, generate=True):
         super(Decoder, self).__init__()
         self.device = device
         self.image_shape = image_shape
@@ -20,45 +20,48 @@ class Decoder(torch.nn.Module):
         self.n_images = n_images
         self.generate = True
 
-        self.images = nn.Parameter(torch.rand((n_images + 1, *image_shape), dtype=torch.float32))
-
+        images = torch.ones((n_images + 1, *image_shape), dtype=torch.float32)
         if generate:
             for i in range(n_images):
                 image = load_sample(i)
                 image = torch.from_numpy(np.array(image)).float() / 255
-                self.images[i] = image.permute(2, 0, 1)
-            self.images[n_images] = (torch.ones(image_shape).float())
-            self.images[n_images].permute(2, 0, 1)
+                images[i] = image.permute(2, 0, 1)
+            images[n_images] = (torch.ones(image_shape).float())
+            images[n_images].permute(2, 0, 1)
+
+        self.images = nn.Parameter(images)
 
     def get_image(self, ind):
         return self.images[ind]
 
     def forward(self, X):
         batch_size = X.shape[0]
-        n_emoji = X.shape[1]
         X = self.filter_sugggest(X)
+        suggest_size = X.shape[1]
 
-        result = torch.ones((batch_size, ) + self.image_shape).to(self.device)
-        for batch_number in range(batch_size):
-            for suggest in range(X.shape[1]):
-                data = X[batch_number][suggest]
-                # image = self.get_image(data[5:].argmax())
-                image = self.get_image(0)
-                x1, x2, y1, y2 = data[:4].abs()
+        params = X[:, :, :4]
+        conf = X[:, :, 4:]
+        classes = conf.shape[2]
 
-                if x2 <= x1:
-                    x1, x2 = x2, x1
-                if y2 <= y1:
-                    y1, y2 = y2, y1
-                print(x1.item(), x2.item(), y1.item(), y2.item())
-                if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2] or x2 <= x1 or y2 <= y1:
-                    continue
+        c1, c2, w, h = torch.chunk(params, 4, dim=2)
+        x1 = c1 - w / 2
+        x2 = c1 + w / 2
+        y1 = c2 - h / 2
+        y2 = c2 + h / 2
+        transforms = torch.cat([x1, x2, y1, y2], dim=2)
+        transforms = transforms.reshape(-1, 4)
+        transforms = transforms.unsqueeze(1).repeat(1, conf.shape[2], 1)
+        transforms = transforms.reshape(-1, 4)
+        images = self.images.repeat(batch_size * suggest_size, 1, 1, 1, 1)
+        images = images.reshape(-1, *self.image_shape)
 
-                result[batch_number] += self.apply_transform(
-                    image.reshape(1, *image.shape), torch.tensor([[x1, x2, y1, y2]]).to(self.device))[0]
+        processed = self.apply_transform(images, transforms)
+        processed = processed.reshape(batch_size, suggest_size, classes, -1).permute(3, 0, 1, 2)
+        processed = processed * conf
+        processed = processed.permute(1, 2, 3, 0).sum(dim=2).mean(dim=1)
+        processed = processed.reshape(batch_size, *self.image_shape)
 
-        result = result[:, :3]
-        return result
+        return processed[:, :3]
 
     def forward1(self, X):
         n_pictures = X.shape[0]
@@ -80,7 +83,6 @@ class Decoder(torch.nn.Module):
             if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2]:
                 continue
 
-            # new_image = self.get_image(c[i].argmax())
             new_image = self.get_image(0)
             c_new = new_image[:3, :, :]
             alpha_new = new_image[3, :, :].repeat(3, 1, 1)
@@ -94,7 +96,13 @@ class Decoder(torch.nn.Module):
         return img[:, :3]
 
     def filter_sugggest(self, X):
-        return X[:, :1]
+        # return X[:, -190:]
+        return X[:, -50:]
+        # confs = X[:, :, 4:]
+        # confs = confs.max(dim=2)[0]
+        # confs = confs.argmax(dim=1)
+        # res = X[range(X.shape[0]), confs]
+        # return res[:, None, :]
 
     def get_images(self, X):
         return X[:, :, :4]
@@ -106,7 +114,6 @@ class Decoder(torch.nn.Module):
 
     # transform : row1, row2, col1, col2 -- coordinates [0 - image_size)
     def apply_transform(self, images, transforms):
-        print("Applying")
         N, CH, image_row, image_col = images.shape
         assert (N == transforms.shape[0])
         assert (image_col == image_row)
@@ -117,7 +124,6 @@ class Decoder(torch.nn.Module):
         box_cols = cols2 - cols1
         box_WHs = (box_rows * box_cols).int()
         T = get_transform_matrix(image_size, transforms)
-        print(T[0, 0, 0].requires_grad)
         C = get_coordinates_matrix(image_size)
         TC = T @ C
         TC = TC[:, :2]

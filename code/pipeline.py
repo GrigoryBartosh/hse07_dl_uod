@@ -17,9 +17,9 @@ class Pipeline:
 
         # Params
         self.device = device
-        self.class_num = 13
+        self.class_num = 4
         self.encoder_learning_rate = 0.0001
-        self.batch_size = 4
+        self.batch_size = 2
         self.num_epochs = 50
 
         self.train_data = self.get_train_data()
@@ -32,7 +32,7 @@ class Pipeline:
         self.test_loader = self.get_test_loader()
 
     def get_model(self):
-        encoder = SSD300(self.class_num)
+        encoder = SSD300(self.class_num + 1)
         decoder = Decoder(self.device, n_images=self.class_num)
         return EncoderDecoder(encoder, decoder)
 

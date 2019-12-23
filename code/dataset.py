@@ -78,6 +78,6 @@ if __name__ == "__main__":
         targ_dir = f'./../datasets/big-emoji/test_{i}.png'
         x_image_dir = os.path.join(emoji_dir, f'test_{i}.png')
         x_image = Image.open(x_image_dir)
-        x_image = x_image.resize((100, 100))
+        x_image = x_image.resize((32, 32))
         x_image = np.array(x_image)
         plt.imsave(targ_dir, x_image)
