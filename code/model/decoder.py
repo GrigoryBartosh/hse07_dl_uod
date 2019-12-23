@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import torch.nn
+import torch.nn as nn
 import os
 import matplotlib.pyplot as plt
 
@@ -8,13 +8,11 @@ from PIL import Image
 
 
 def load_sample(number):
-    return Image.open(os.path.join('./../datasets/emoji', f'test_{number}.png'))
-    # return Image.open(os.path.join('./../datasets/bif-emoji', f'test_{number}.png'))
-    # return Image.open(os.path.join('./../datasets/black', 'black.png'))
+    return Image.open(os.path.join('./../datasets/big-emoji', f'test_{number}.png'))
 
 
 class Decoder(torch.nn.Module):
-    def __init__(self, device, image_shape=(4, 300, 300), emoji_shape=(4, 64, 64), n_images=13, generate=True):
+    def __init__(self, device, image_shape=(4, 100, 100), emoji_shape=(4, 64, 64), n_images=13, generate=False):
         super(Decoder, self).__init__()
         self.device = device
         self.image_shape = image_shape
@@ -22,7 +20,7 @@ class Decoder(torch.nn.Module):
         self.n_images = n_images
         self.generate = True
 
-        self.images = torch.ones((n_images + 1, *image_shape), requires_grad=True, dtype=torch.float32)
+        self.images = nn.Parameter(torch.rand((n_images + 1, *image_shape), dtype=torch.float32))
 
         if generate:
             for i in range(n_images):
@@ -36,26 +34,28 @@ class Decoder(torch.nn.Module):
         return self.images[ind]
 
     def forward(self, X):
-        n_pictures = X.shape[0]
+        batch_size = X.shape[0]
         n_emoji = X.shape[1]
         X = self.filter_sugggest(X)
 
-        result = torch.ones((n_pictures,) + self.image_shape, requires_grad=True)
-        # result = torch.zeros((n_pictures,) + self.image_shape).to(self.device)
-        for batch_number in range(n_pictures):
+        result = torch.ones((batch_size, ) + self.image_shape).to(self.device)
+        for batch_number in range(batch_size):
             for suggest in range(X.shape[1]):
                 data = X[batch_number][suggest]
                 # image = self.get_image(data[5:].argmax())
                 image = self.get_image(0)
                 x1, x2, y1, y2 = data[:4].abs()
-                if (x2 <= x1):
+
+                if x2 <= x1:
                     x1, x2 = x2, x1
-                if (y2 <= y1):
+                if y2 <= y1:
                     y1, y2 = y2, y1
                 print(x1.item(), x2.item(), y1.item(), y2.item())
                 if x1 < 0 or y1 < 0 or x2 > self.image_shape[1] or y2 > self.image_shape[2] or x2 <= x1 or y2 <= y1:
                     continue
-                result[batch_number] += apply_transform(image.reshape(1, *image.shape), torch.tensor([[x1, x2, y1, y2]]))
+
+                result[batch_number] += self.apply_transform(
+                    image.reshape(1, *image.shape), torch.tensor([[x1, x2, y1, y2]]).to(self.device))[0]
 
         result = result[:, :3]
         return result
@@ -104,6 +104,34 @@ class Decoder(torch.nn.Module):
         # TODO
         return X
 
+    # transform : row1, row2, col1, col2 -- coordinates [0 - image_size)
+    def apply_transform(self, images, transforms):
+        print("Applying")
+        N, CH, image_row, image_col = images.shape
+        assert (N == transforms.shape[0])
+        assert (image_col == image_row)
+        image_size = image_row
+        image_WH = image_col * image_row
+        rows1, rows2, cols1, cols2 = (transforms * image_size).T
+        box_rows = rows2 - rows1
+        box_cols = cols2 - cols1
+        box_WHs = (box_rows * box_cols).int()
+        T = get_transform_matrix(image_size, transforms)
+        print(T[0, 0, 0].requires_grad)
+        C = get_coordinates_matrix(image_size)
+        TC = T @ C
+        TC = TC[:, :2]
+        TC = TC.repeat(image_WH, 1, 1, 1).permute(1, 0, 2, 3)  # N x image_WH x 2 x image_WH
+        B = C[:2].repeat(image_WH, N, 1, 1).permute(1, 3, 2, 0)
+        EPS = 1e-8
+        A = (TC - B).pow(2).sum(2)
+        A = -A
+        A = A.softmax(dim=2)
+        A = A.to(self.device)
+
+        P = images.reshape(N, CH, -1).permute(0, 2, 1)
+        return (A @ P).reshape(N, image_size, image_size, CH).permute(0, 3, 1, 2)
+
 
 def get_transform_matrix(image_size, transforms):
     T = torch.zeros((transforms.shape[0], 3, 3))
@@ -139,42 +167,5 @@ def get_box_coordinates_matrix1(shift_H, shift_W, height, width):
     ind[1, :] += shift_W
     return ind
 
-
-# image : image_size x image_size
-# transform : row1, row2, col1, col2 -- coordinates [0 - image_size)
-def apply_transform(images, transforms):
-    print("Applying")
-    N, CH, image_row, image_col = images.shape
-    assert (N == transforms.shape[0])
-    assert (image_col == image_row)
-    image_size = image_row
-    image_WH = image_col * image_row
-    rows1, rows2, cols1, cols2 = (transforms * image_size).T
-    box_rows = rows2 - rows1
-    box_cols = cols2 - cols1
-    box_WHs = (box_rows * box_cols).int()
-    T = get_transform_matrix(image_size, transforms)
-    C = get_coordinates_matrix(image_size)
-    TC = T @ C
-    TC = TC[:, :2]
-    TC = TC.repeat(image_WH, 1, 1, 1).permute(1, 0, 2, 3)  # N x image_WH x 2 x image_WH
-    B = C[:2].repeat(image_WH, N, 1, 1).permute(1, 3, 2, 0)
-    EPS = 1e-8
-    #     A = (TC - B).pow(2).sum(1) + EPS
-    #     A = (A.T / A.max(dim=1)[0].T).T
-    #     A = ((1 - A) / A).log()
-    A = (TC - B).pow(2).sum(2)
-    A = -A
-    A = A.softmax(dim=2)
-
-    P = images.reshape(N, CH, -1).permute(0, 2, 1)
-    return (A @ P).reshape(N, image_size, image_size, CH).permute(0, 3, 1, 2)
-
-
 def to_pil(image):
     return (image * 255).int().permute(1, 2, 0).detach().numpy()
-
-
-if __name__ == "__main__":
-    image = torch.zeros((3, 300, 300))
-    apply_transform(image, torch.tensor([0, 64, 0, 64]))

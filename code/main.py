@@ -19,4 +19,3 @@ if __name__ == '__main__':
         pipeline.test_loader,
         pipeline.num_epochs
     )
-    # print('hello {}'.format('there'))
